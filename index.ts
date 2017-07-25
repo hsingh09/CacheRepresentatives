@@ -2,12 +2,10 @@ require('dotenv').config();
 
 import * as restify from "restify";
 import * as request from "request";
-import * as tedious from "tedious"
+import * as sequelize from "sequelize";
 import * as Senator from "./models/Senator";
 import * as HouseRep from "./models/HouseMember";
-import * as Types from "./models/SharedTypes"
-
-let connection = tedious.Connection; 
+import * as Types from "./models/SharedTypes";
 
 console.log("process.env.PRO_PUBLICA_API_KEY: " + process.env.PRO_PUBLICA_API_KEY);
 

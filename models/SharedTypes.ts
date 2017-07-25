@@ -14,4 +14,3 @@ export const enum Party
     Green,
     Other
 }
-

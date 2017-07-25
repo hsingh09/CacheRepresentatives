@@ -1,9 +1,0 @@
-{
-    "compileOnSave": true,
-    "compilerOptions":
-    {
-    },
-    "exclude": [
-        "node_modules"
-    ]
-}

@@ -3,11 +3,9 @@ exports.__esModule = true;
 require('dotenv').config();
 var restify = require("restify");
 var request = require("request");
-var tedious = require("tedious");
 var Senator = require("./models/Senator");
 var HouseRep = require("./models/HouseMember");
 var Types = require("./models/SharedTypes");
-var connection = tedious.Connection;
 console.log("process.env.PRO_PUBLICA_API_KEY: " + process.env.PRO_PUBLICA_API_KEY);
 // Private config file for API keys
 var config = require('./config');
