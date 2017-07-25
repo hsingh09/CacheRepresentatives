@@ -21,7 +21,7 @@ var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME,
 });
 var repDb = sqlize.define('Representative', {
     representativeId: {
-        type: sequelize.INTEGER
+        type: sequelize.STRING
     },
     firstName: {
         type: sequelize.STRING
@@ -108,7 +108,7 @@ function updateDatabase(req, res, next) {
     repDb.sync({ force: true }).then(function () {
         // Table created
         return repDb.create({
-            representativeId: 123,
+            representativeId: "S000123",
             firstName: "Harnoor",
             lastName: "Singh",
             chamber: 0,
