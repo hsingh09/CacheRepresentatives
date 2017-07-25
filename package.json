@@ -1,0 +1,31 @@
+{
+  "name": "cacherepresentatives",
+  "version": "1.0.0",
+  "description": "Queries ProPublic API and caches the list of senators in a SQL database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hsingh09/CacheRepresentatives.git"
+  },
+  "author": "Harnoor Singh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hsingh09/CacheRepresentatives/issues"
+  },
+  "homepage": "https://github.com/hsingh09/CacheRepresentatives#readme",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "request": "^2.81.0",
+    "restify": "^4.3.0",
+    "tedious": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/request": "0.0.42",
+    "@types/restify": "^2.0.42",
+    "@types/tedious": "^1.8.29"
+  }
+}
