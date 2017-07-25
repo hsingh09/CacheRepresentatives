@@ -7,7 +7,32 @@ import * as Senator from "./models/Senator";
 import * as HouseRep from "./models/HouseMember";
 import * as Types from "./models/SharedTypes";
 
-console.log("process.env.PRO_PUBLICA_API_KEY: " + process.env.PRO_PUBLICA_API_KEY);
+var data = require('./data');
+
+var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME, process.env.REP_DB_PASSWORD, {
+  host: 'replist.database.windows.net',
+  port: 1433,
+  dialect: 'mssql',
+  pool: {
+    max: 5,
+    min: 0,
+    idle: 10000
+  },
+  dialectOptions: {
+    encrypt: true
+  }
+});
+
+
+sqlize
+  .authenticate()
+  .then(() => {
+    console.log('Connection has been established successfully.');
+    OnDatabaseConnectionEstablished();
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
 
 // Private config file for API keys
 var config = require('./config');
@@ -40,6 +65,7 @@ function getHouse(req : restify.Request, res, next : restify.Next)
     else
     {
       res.locals.proPublicaHouseSuccess = true;
+      console.log(requestBody);
       res.locals.proPublicaHouseResults = JSON.parse(requestBody).results;
     }
 
@@ -72,9 +98,15 @@ function getSenate(req : restify.Request, res, next: restify.Next)
   });
 }
 
+function loadData(req : restify.Request, res, next: restify.Next)
+{
+
+}
+
 function updateDatabase(req : restify.Request, res, next: restify.Next)
 {
-    let senators = res.locals.proPublicaSenateResults[0]['members'];
+    //res.json(res.locals.proPublicaSenateResults);
+    /*let senators = res.locals.proPublicaSenateResults[0]['members'];
     let houseMembers = res.locals.proPublicaHouseResults[0]['members'];
 
     let allSenators : Senator.Senator[] = [];
@@ -120,7 +152,7 @@ function updateDatabase(req : restify.Request, res, next: restify.Next)
     var returnObject = {};
     returnObject['senators'] = allSenators;
     returnObject['house'] = allHouseMembers;
-    res.json(returnObject);
+    res.json(returnObject);*/
     next();
 }
 
@@ -145,9 +177,14 @@ function GetParty(party : string) : Types.Party
 }
 
 var server = restify.createServer();
-server.get('/', index);
-server.head('/', index);
-server.get('/update', [getHouse, getSenate, updateDatabase])
-server.listen(8080, function () {
-    console.log('%s listening at %s', server.name, server.url);
-});
+
+function OnDatabaseConnectionEstablished()
+{
+    server.get('/', index);
+    server.head('/', index);
+    //server.get('/update', [getHouse, getSenate, updateDatabase])
+    server.get('/update', [updateDatabase]);
+    server.listen(8080, function () {
+        console.log('%s listening at %s', server.name, server.url);
+    });
+}

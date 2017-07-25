@@ -3,10 +3,30 @@ exports.__esModule = true;
 require('dotenv').config();
 var restify = require("restify");
 var request = require("request");
-var Senator = require("./models/Senator");
-var HouseRep = require("./models/HouseMember");
+var sequelize = require("sequelize");
 var Types = require("./models/SharedTypes");
-console.log("process.env.PRO_PUBLICA_API_KEY: " + process.env.PRO_PUBLICA_API_KEY);
+var data = require('./data');
+var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME, process.env.REP_DB_PASSWORD, {
+    host: 'replist.database.windows.net',
+    port: 1433,
+    dialect: 'mssql',
+    pool: {
+        max: 5,
+        min: 0,
+        idle: 10000
+    },
+    dialectOptions: {
+        encrypt: true
+    }
+});
+sqlize
+    .authenticate()
+    .then(function () {
+    console.log('Connection has been established successfully.');
+    OnDatabaseConnectionEstablished();
+})["catch"](function (err) {
+    console.error('Unable to connect to the database:', err);
+});
 // Private config file for API keys
 var config = require('./config');
 var proPublicaRequest = request.defaults({
@@ -29,6 +49,7 @@ function getHouse(req, res, next) {
         }
         else {
             res.locals.proPublicaHouseSuccess = true;
+            console.log(requestBody);
             res.locals.proPublicaHouseResults = JSON.parse(requestBody).results;
         }
         //1      res.json(res.locals);  
@@ -52,14 +73,20 @@ function getSenate(req, res, next) {
         next();
     });
 }
+function loadData(req, res, next) {
+}
 function updateDatabase(req, res, next) {
-    var senators = res.locals.proPublicaSenateResults[0]['members'];
-    var houseMembers = res.locals.proPublicaHouseResults[0]['members'];
-    var allSenators = [];
-    var allHouseMembers = [];
-    for (var senatorKey in senators) {
-        var senator = senators[senatorKey];
-        var senatorObject = new Senator.Senator();
+    //res.json(res.locals.proPublicaSenateResults);
+    /*let senators = res.locals.proPublicaSenateResults[0]['members'];
+    let houseMembers = res.locals.proPublicaHouseResults[0]['members'];
+
+    let allSenators : Senator.Senator[] = [];
+    let allHouseMembers : HouseRep.HouseMember[] = [];
+
+    for (let senatorKey in senators)
+    {
+        let senator = senators[senatorKey];
+        let senatorObject = new Senator.Senator();
         senatorObject.representativeId = senator.id;
         senatorObject.firstName = senator.first_name;
         senatorObject.lastName = senator.last_name;
@@ -73,9 +100,12 @@ function updateDatabase(req, res, next) {
         senatorObject.phone = senator.phone;
         allSenators.push(senatorObject);
     }
-    for (var houseKey in houseMembers) {
-        var houseRep = houseMembers[houseKey];
-        var houseObject = new HouseRep.HouseMember();
+
+    for (let houseKey in houseMembers)
+    {
+        let houseRep = houseMembers[houseKey];
+        let houseObject = new HouseRep.HouseMember();
+
         houseObject.representativeId = houseRep.id;
         houseObject.firstName = houseRep.first_name;
         houseObject.lastName = houseRep.last_name;
@@ -89,10 +119,11 @@ function updateDatabase(req, res, next) {
         houseObject.phone = houseRep.phone;
         allHouseMembers.push(houseObject);
     }
+
     var returnObject = {};
     returnObject['senators'] = allSenators;
     returnObject['house'] = allHouseMembers;
-    res.json(returnObject);
+    res.json(returnObject);*/
     next();
 }
 function GetParty(party) {
@@ -110,9 +141,12 @@ function GetParty(party) {
     }
 }
 var server = restify.createServer();
-server.get('/', index);
-server.head('/', index);
-server.get('/update', [getHouse, getSenate, updateDatabase]);
-server.listen(8080, function () {
-    console.log('%s listening at %s', server.name, server.url);
-});
+function OnDatabaseConnectionEstablished() {
+    server.get('/', index);
+    server.head('/', index);
+    //server.get('/update', [getHouse, getSenate, updateDatabase])
+    server.get('/update', [updateDatabase]);
+    server.listen(8080, function () {
+        console.log('%s listening at %s', server.name, server.url);
+    });
+}
