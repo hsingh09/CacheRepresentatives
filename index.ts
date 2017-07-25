@@ -7,7 +7,7 @@ import * as Senator from "./models/Senator";
 import * as HouseRep from "./models/HouseMember";
 import * as Types from "./models/SharedTypes";
 
-var data = require('./data');
+var APIDATA = require('./data');
 
 var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME, process.env.REP_DB_PASSWORD, {
   host: 'replist.database.windows.net',
@@ -23,6 +23,23 @@ var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME,
   }
 });
 
+const repDb = sqlize.define('Representative', {
+    representativeId: {
+        type: sequelize.INTEGER
+    },
+    firstName: {
+        type: sequelize.STRING
+    },
+    lastName: {
+        type: sequelize.STRING
+    },
+    chamber: {
+        type: sequelize.INTEGER
+    },
+    party: {
+        type: sequelize.INTEGER
+    }
+});
 
 sqlize
   .authenticate()
@@ -65,7 +82,6 @@ function getHouse(req : restify.Request, res, next : restify.Next)
     else
     {
       res.locals.proPublicaHouseSuccess = true;
-      console.log(requestBody);
       res.locals.proPublicaHouseResults = JSON.parse(requestBody).results;
     }
 
@@ -100,11 +116,37 @@ function getSenate(req : restify.Request, res, next: restify.Next)
 
 function loadData(req : restify.Request, res, next: restify.Next)
 {
+    res.locals = {};
+    //console.log(APIDATA);
+    
+    res.locals.data = APIDATA.DATA;
+    next();
+}
 
+function findAll(req: restify.Request, res, next: restify.Next)
+{
+    repDb.findAll().then(reps => {
+        console.log(reps)
+        res.json(reps);
+        next();
+    })
 }
 
 function updateDatabase(req : restify.Request, res, next: restify.Next)
 {
+    res.json(res.locals.data);
+
+    // force: true will drop the table if it already exists
+    repDb.sync({force: true}).then(() => {
+        // Table created
+        return repDb.create({
+            representativeId: 123,
+            firstName: "Harnoor",
+            lastName: "Singh",
+            chamber: 0,
+            party: 0
+        });
+    });
     //res.json(res.locals.proPublicaSenateResults);
     /*let senators = res.locals.proPublicaSenateResults[0]['members'];
     let houseMembers = res.locals.proPublicaHouseResults[0]['members'];
@@ -183,8 +225,10 @@ function OnDatabaseConnectionEstablished()
     server.get('/', index);
     server.head('/', index);
     //server.get('/update', [getHouse, getSenate, updateDatabase])
-    server.get('/update', [updateDatabase]);
+    server.get('/update', [loadData, updateDatabase]);
     server.listen(8080, function () {
         console.log('%s listening at %s', server.name, server.url);
     });
+
+    server.get('/find', [findAll]);
 }
