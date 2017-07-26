@@ -25,7 +25,7 @@ var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME,
 
 const repDb = sqlize.define('Representative', {
     representativeId: {
-        type: sequelize.INTEGER
+        type: sequelize.STRING
     },
     firstName: {
         type: sequelize.STRING
@@ -38,6 +38,24 @@ const repDb = sqlize.define('Representative', {
     },
     party: {
         type: sequelize.INTEGER
+    },
+    contactUrl: {
+        type: sequelize.STRING
+    },
+    cspanId: {
+        type: sequelize.STRING
+    },
+    facebookAccount: {
+        type: sequelize.STRING
+    },
+    googleEntityId: {
+        type: sequelize.STRING
+    },
+    govtrackId: {
+        type: sequelize.STRING
+    },
+    phone: {
+        type: sequelize.STRING
     }
 });
 
@@ -116,9 +134,7 @@ function getSenate(req : restify.Request, res, next: restify.Next)
 
 function loadData(req : restify.Request, res, next: restify.Next)
 {
-    res.locals = {};
-    //console.log(APIDATA);
-    
+    res.locals = {};    
     res.locals.data = APIDATA.DATA;
     next();
 }
@@ -126,7 +142,6 @@ function loadData(req : restify.Request, res, next: restify.Next)
 function findAll(req: restify.Request, res, next: restify.Next)
 {
     repDb.findAll().then(reps => {
-        console.log(reps)
         res.json(reps);
         next();
     })
@@ -134,19 +149,38 @@ function findAll(req: restify.Request, res, next: restify.Next)
 
 function updateDatabase(req : restify.Request, res, next: restify.Next)
 {
-    res.json(res.locals.data);
+    let senators = res.locals.data['senators'];
+    let houseMembers = res.locals.data['house'];
 
     // force: true will drop the table if it already exists
     repDb.sync({force: true}).then(() => {
-        // Table created
-        return repDb.create({
-            representativeId: 123,
-            firstName: "Harnoor",
-            lastName: "Singh",
-            chamber: 0,
-            party: 0
-        });
+        let bulkUpdate = [];
+
+        for (var senatorIndex in senators)
+        {
+            bulkUpdate.push(senators[senatorIndex]);
+
+        }
+
+        for (var houseMemberIndex in houseMembers)
+        {
+            bulkUpdate.push(houseMembers[houseMemberIndex]);
+        }
+
+        repDb.bulkCreate(bulkUpdate).then(() => {
+            console.log("FINISHED UPLOADING KITTENS");
+        })
+
+        /*return repDb.create({
+            representativeId: houseMember.representativeId,
+            firstName: houseMember.firstName,
+            lastName: houseMember.lastName,
+            chamber: houseMember.chamber,
+            party: houseMember.parse
+        });*/
+
     });
+
     //res.json(res.locals.proPublicaSenateResults);
     /*let senators = res.locals.proPublicaSenateResults[0]['members'];
     let houseMembers = res.locals.proPublicaHouseResults[0]['members'];

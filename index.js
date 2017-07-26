@@ -21,7 +21,7 @@ var sqlize = new sequelize(process.env.REP_DB_NAME, process.env.REP_DB_USERNAME,
 });
 var repDb = sqlize.define('Representative', {
     representativeId: {
-        type: sequelize.INTEGER
+        type: sequelize.STRING
     },
     firstName: {
         type: sequelize.STRING
@@ -34,6 +34,24 @@ var repDb = sqlize.define('Representative', {
     },
     party: {
         type: sequelize.INTEGER
+    },
+    contactUrl: {
+        type: sequelize.STRING
+    },
+    cspanId: {
+        type: sequelize.STRING
+    },
+    facebookAccount: {
+        type: sequelize.STRING
+    },
+    googleEntityId: {
+        type: sequelize.STRING
+    },
+    govtrackId: {
+        type: sequelize.STRING
+    },
+    phone: {
+        type: sequelize.STRING
     }
 });
 sqlize
@@ -103,17 +121,27 @@ function findAll(req, res, next) {
     });
 }
 function updateDatabase(req, res, next) {
-    res.json(res.locals.data);
+    var senators = res.locals.data['senators'];
+    var houseMembers = res.locals.data['house'];
     // force: true will drop the table if it already exists
     repDb.sync({ force: true }).then(function () {
-        // Table created
-        return repDb.create({
-            representativeId: 123,
-            firstName: "Harnoor",
-            lastName: "Singh",
-            chamber: 0,
-            party: 0
+        var bulkUpdate = [];
+        for (var senatorIndex in senators) {
+            bulkUpdate.push(senators[senatorIndex]);
+        }
+        for (var houseMemberIndex in houseMembers) {
+            bulkUpdate.push(houseMembers[houseMemberIndex]);
+        }
+        repDb.bulkCreate(bulkUpdate).then(function () {
+            console.log("FINISHED UPLOADING KITTENS");
         });
+        /*return repDb.create({
+            representativeId: houseMember.representativeId,
+            firstName: houseMember.firstName,
+            lastName: houseMember.lastName,
+            chamber: houseMember.chamber,
+            party: houseMember.parse
+        });*/
     });
     //res.json(res.locals.proPublicaSenateResults);
     /*let senators = res.locals.proPublicaSenateResults[0]['members'];
